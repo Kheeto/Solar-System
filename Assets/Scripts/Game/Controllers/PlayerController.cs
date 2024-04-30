@@ -18,6 +18,9 @@ public class PlayerController : GravityObject {
 	public float jetpackRefuelTime = 2;
 	public float jetpackRefuelDelay = 2;
 
+	[Header("Align to gravity")]
+	public float alignSmoothing = 0.05f;
+
 	[Header ("Mouse settings")]
 	public float mouseSensitivityMultiplier = 1;
 	public float maxMouseSmoothTime = 0.3f;
@@ -77,7 +80,7 @@ public class PlayerController : GravityObject {
 	}
 
 	void Update () {
-		HandleMovement ();
+		//HandleMovement ();
 	}
 
 	void HandleMovement () {
@@ -165,6 +168,8 @@ public class PlayerController : GravityObject {
 	}
 
 	void FixedUpdate () {
+		HandleMovement();
+
 		CelestialBody[] bodies = NBodySimulation.Bodies;
 		Vector3 gravityOfNearestBody = Vector3.zero;
 		float nearestSurfaceDst = float.MaxValue;
@@ -188,7 +193,8 @@ public class PlayerController : GravityObject {
 
 		// Rotate to align with gravity up
 		Vector3 gravityUp = -gravityOfNearestBody.normalized;
-		rb.rotation = Quaternion.FromToRotation (transform.up, gravityUp) * rb.rotation;
+		Quaternion targetRotation = Quaternion.FromToRotation (transform.up, gravityUp) * rb.rotation;
+		rb.rotation = Quaternion.Slerp(rb.rotation, targetRotation, alignSmoothing);
 
 		// Move
 		rb.MovePosition (rb.position + smoothVelocity * Time.fixedDeltaTime);
